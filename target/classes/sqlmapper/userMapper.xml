@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.weny.mybatis.mapper.UserMapper">
+	<insert id="insertOneUser" parameterType="com.weny.mybatis.model.User">
+		<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+		<!-- 适用于mysql数据库的自增主键
+		<selectKey keyProperty="id" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		-->
+		<!-- 适用于mysql适用UUID作为主键,同时sql需要显示指定ID， 需要注意order 的执行先后
+		 <selectKey keyProperty="id" order="BEFORE" resultType="String">
+		  SELECT UUID()
+		 </selectKey>
+		 -->
+		
+		insert into user (id,name, age, address) values(#{id},#{name},#{age},#{address})
+	</insert> 
+
+	<select id="selectUserById" parameterType="int"	resultType="com.weny.mybatis.model.User">
+		SELECT * FROM USER WHERE id = #{id}
+	</select>
+
+	<select id="selectUserByName" parameterType="java.lang.String"	resultType="com.weny.mybatis.model.User">
+		SELECT * FROM USER WHERE NAME LIKE '%${value}%'
+	</select>
+	
+	<update id="updateUserById" parameterType="com.weny.mybatis.model.User">
+		 UPDATE USER SET address=#{address} WHERE id= #{id}
+	</update>
+	
+	<delete id="deleteUserById" parameterType="int">
+		DELETE FROM USER WHERE id=#{value}
+	</delete>
+	
+	<select id="findUserList" parameterType="com.weny.mybatis.model.UserQueryVo" resultType="com.weny.mybatis.model.UserCustom">
+	 	SELECT * FROM USER WHERE age=#{userCustom.age} AND address LIKE '%${userCustom.address}%'
+	</select>
+	
+	<!-- resultMap -->
+	<resultMap type="com.weny.mybatis.model.User" id="userListResultMap">
+		<id column="id_" property="id"/>
+		<result column="name_" property="name"/>
+		<result column="address_" property="address"/>
+	</resultMap>
+	
+	<select id="findUserListResultMap" parameterType="com.weny.mybatis.model.UserQueryVo" resultMap="userListResultMap">
+	 	SELECT id id_, name name_,address address_ FROM USER WHERE age=#{userCustom.age} AND address LIKE '%${userCustom.address}%'
+	</select>
+	
+	<!-- 动态sql -->
+	<select id="findUserListBydynamicSql" parameterType="com.weny.mybatis.model.UserQueryVo" resultType="com.weny.mybatis.model.UserCustom">
+	 	SELECT * FROM USER 
+	 	<where>
+	 		<if test="userCustom != null">
+	 			<if test="userCustom.age != null and userCustom.age != ''">
+	 				and	age=#{userCustom.age} 
+	 			</if>
+	 			<if test="userCustom.address != null and userCustom.address !=''">
+	 				AND address LIKE '%${userCustom.address}%'
+	 			</if>
+	 		</if>
+	 	</where>
+	</select>
+	
+	<!-- sql 片段 
+	一般抽取不带where
+	-->
+	<sql id="user_where">
+		<if test="userCustom != null">
+			<if test="userCustom.age != null and userCustom.age != ''">
+				and age=#{userCustom.age}
+			</if>
+			<if test="userCustom.address != null and userCustom.address !=''">
+				AND address LIKE '%${userCustom.address}%'
+			</if>
+		</if>
+	</sql>
+	<select id="findUserListBySqlSnippet" parameterType="com.weny.mybatis.model.UserQueryVo" resultType="com.weny.mybatis.model.UserCustom">
+	 	SELECT * FROM USER 
+	 	<where>
+	 		<include refid="user_where"></include>
+	 	</where>
+	</select>
+	
+	<!-- foreach 循环拼接
+	 -->
+	<select id="findUserListBySqlForeatch" parameterType="com.weny.mybatis.model.UserQueryVo" resultType="com.weny.mybatis.model.UserCustom">
+		SELECT * FROM USER 
+		<where>
+			<if test="userCustom != null">
+				<foreach collection="ids" item="item_id" separator="OR">
+					id=#{item_id}
+				</foreach>
+				<if test="userCustom.address != null and userCustom.address !=''">
+					AND address LIKE '%${userCustom.address}%'
+				</if>
+			</if>
+		</where>
+	 </select>
+	 
+</mapper>

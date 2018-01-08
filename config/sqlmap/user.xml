@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="user">
+	<insert id="insertOneUser" parameterType="com.weny.mybatis.model.User">
+		<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+		<!-- 适用于mysql数据库的自增主键
+		<selectKey keyProperty="id" order="AFTER" resultType="int">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		-->
+		<!-- 适用于mysql适用UUID作为主键,同时sql需要显示指定ID， 需要注意order 的执行先后
+		 <selectKey keyProperty="id" order="BEFORE" resultType="String">
+		  SELECT UUID()
+		 </selectKey>
+		 -->
+		
+		insert into user (id,name, age, address) values(#{id},#{name},#{age},#{address})
+	</insert> 
+
+	<select id="selectUserById" parameterType="int"	resultType="com.weny.mybatis.model.User">
+		SELECT * FROM USER WHERE id = #{id}
+	</select>
+
+	<select id="selectUserByName" parameterType="java.lang.String"	resultType="com.weny.mybatis.model.User">
+		SELECT * FROM USER WHERE NAME LIKE '%${value}%'
+	</select>
+	
+	<update id="updateUserById" parameterType="com.weny.mybatis.model.User">
+		 UPDATE USER SET address=#{address} WHERE id= #{id}
+	</update>
+	
+	<delete id="deleteUserById" parameterType="int">
+		DELETE FROM USER WHERE id=#{value}
+	</delete>
+</mapper>

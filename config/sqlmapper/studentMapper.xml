@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.weny.mybatis.mapper.StudentMapper">
+
+	<resultMap type="com.weny.mybatis.model.Student" id="studentListResultMap">
+		<id column="sid" property="id"/>
+		<result column="sno" property="sNo"/>
+		<result column="sname" property="sName"/>
+		<association property="classes" javaType="com.weny.mybatis.model.Classes">
+			<result column="classno" property="cNo"/>
+			<result column="cclassname" property="cName"/>
+		</association>
+		<!-- 注意此处使用的是ofType 不是javaType -->
+		<collection property="course"  ofType="com.weny.mybatis.model.Course">
+			<result column="cno" property="cuNo"/>
+		</collection>
+	</resultMap>
+	
+	<!-- 懒加载实现按需加载  注意javaType的配置-->
+	<resultMap type="com.weny.mybatis.model.Student" id="studentListInfoResultMap">
+		<id column="id" property="id"/>
+		<result column="no" property="sNo"/>
+		<result column="name" property="sName"/>
+		<!-- 
+		select="com.weny.mybatis.mapper.StudentMapper.queryClassByStudentNo"
+		
+		### Cause: java.lang.IllegalStateException: Cannot enable lazy loading because CGLIB is not available. Add CGLIB to your classpath.
+		增加cglib的库
+		 -->
+		<association property="classes" javaType="com.weny.mybatis.model.Classes" select="com.weny.mybatis.mapper.StudentMapper.queryClassByStudentNo" column="no">
+			<result column="classname" property="cName"/>
+			<result column="classno" property="cNo"/>
+			<result column="studentno" property="cSno"/>
+		</association>
+		
+	</resultMap>
+
+	<select id="queryStudentByClassNo" parameterType="String" resultMap="studentListResultMap">
+		SELECT student.no sno,student.name sname,student.classno sclassno,class.classname cclassname,course.courseno cno FROM student , class ,course 
+		WHERE student.classno=#{value} AND student.classno=class.classno AND student.no = course.studentno  AND course.studentno = class.studentno
+	</select>
+	
+	<select id="queryClassByStudentNo" parameterType="String" resultType="com.weny.mybatis.model.Classes">
+		SELECT * FROM class WHERE studentno=#{value}
+	</select>
+	
+	<select id="queryStudentListLazyLoad" resultMap="studentListInfoResultMap">
+		SELECT * FROM Student
+	</select>
+	
+	<!-- 一级缓存和二级缓存的理解 
+	一级缓存存在localMap中，自定义的一个hashMap，在sqlSession作用域下，执行inset update delete 并commit后清空一级缓存，避免脏读
+	-->
+</mapper>
